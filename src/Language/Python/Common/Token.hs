@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Language.Python.Common.Token 
@@ -27,6 +28,9 @@ module Language.Python.Common.Token (
 import Language.Python.Common.Pretty
 import Language.Python.Common.SrcLocation (SrcSpan (..), Span(getSpan))
 import Data.Data
+
+import GHC.Generics
+import Data.Aeson hiding (Number, String)
 
 -- | Lexical tokens.
 data Token 
@@ -146,7 +150,7 @@ data Token
 
    -- Special cases
    | EOFToken { token_span :: !SrcSpan }                          -- ^ End of file 
-   deriving (Eq,Ord,Show,Typeable,Data)
+   deriving (Eq,Ord,Show,Typeable,Data,Generic,ToJSON,FromJSON)
 
 instance Span Token where
   getSpan = token_span 

@@ -33,7 +33,10 @@ Library
       array >= 0.4 && < 0.6,
       transformers >= 0.3 && < 0.6,
       monads-tf == 0.1.*,
-      utf8-string >= 1 && < 2
+      utf8-string >= 1 && < 2,
+      aeson == 1.4.*,
+      bytestring,
+      text == 1.2.*
    build-tools: happy, alex
    exposed-modules:
       Language.Python.Common

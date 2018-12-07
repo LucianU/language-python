@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances, TypeSynonymInstances, CPP, DeriveDataTypeable, DeriveFunctor #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Language.Python.Version2.Syntax.AST 
@@ -67,6 +68,9 @@ module Language.Python.Common.AST (
 import Language.Python.Common.SrcLocation ( Span (getSpan), SrcSpan (..), spanning ) 
 import Data.Data
 
+import GHC.Generics
+import Data.Aeson hiding (Number)
+
 --------------------------------------------------------------------------------
 
 -- | Convenient access to annotations in annotated types. 
@@ -76,7 +80,7 @@ class Annotated t where
 
 -- | Identifier.
 data Ident annot = Ident { ident_string :: !String, ident_annot :: annot }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic,ToJSON,FromJSON)
 
 type IdentSpan = Ident SrcSpan
 
@@ -93,7 +97,10 @@ instance Annotated Ident where
 --    * Version 3.1 <http://docs.python.org/3.1/reference/toplevel_components.html> 
 -- 
 newtype Module annot = Module [Statement annot] -- ^ A module is just a sequence of top-level statements.
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (Module SrcSpan)
+instance FromJSON (Module SrcSpan)
 
 type ModuleSpan = Module SrcSpan
 
@@ -125,7 +132,10 @@ data ImportItem annot =
    , import_as_name :: Maybe (Ident annot)  -- ^ An optional name to refer to the entity (the \'as\' name). 
    , import_item_annot :: annot
    }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (ImportItem SrcSpan)
+instance FromJSON (ImportItem SrcSpan)
 
 type ImportItemSpan = ImportItem SrcSpan
 
@@ -147,7 +157,10 @@ data FromItem annot =
    , from_as_name :: Maybe (Ident annot) -- ^ An optional name to refer to the entity (the \'as\' name).
    , from_item_annot :: annot
    }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (FromItem SrcSpan)
+instance FromJSON (FromItem SrcSpan)
 
 type FromItemSpan = FromItem SrcSpan
 
@@ -161,7 +174,10 @@ instance Annotated FromItem where
 data FromItems annot 
    = ImportEverything { from_items_annot :: annot } -- ^ Import everything exported from the module.
    | FromItems { from_items_items :: [FromItem annot], from_items_annot :: annot } -- ^ Import a specific list of items from the module.
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (FromItems SrcSpan)
+instance FromJSON (FromItems SrcSpan)
 
 type FromItemsSpan = FromItems SrcSpan
 
@@ -178,7 +194,10 @@ data ImportRelative annot
      , import_relative_module :: Maybe (DottedName annot) 
      , import_relative_annot :: annot 
      }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (ImportRelative SrcSpan)
+instance FromJSON (ImportRelative SrcSpan)
 
 type ImportRelativeSpan = ImportRelative SrcSpan
 
@@ -352,7 +371,10 @@ data Statement annot
      , exec_globals_locals :: Maybe (Expr annot, Maybe (Expr annot)) -- ^ Global and local environments to evaluate the expression within.
      , stmt_annot :: annot 
      }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (Statement SrcSpan)
+instance FromJSON (Statement SrcSpan)
 
 type StatementSpan = Statement SrcSpan
 
@@ -366,7 +388,10 @@ instance Annotated Statement where
 data RaiseExpr annot
    = RaiseV3 (Maybe (Expr annot, Maybe (Expr annot))) -- ^ Optional expression to evaluate, and optional \'from\' clause. /Version 3 only/.
    | RaiseV2 (Maybe (Expr annot, (Maybe (Expr annot, Maybe (Expr annot))))) -- ^ /Version 2 only/.
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (RaiseExpr SrcSpan)
+instance FromJSON (RaiseExpr SrcSpan)
 
 type RaiseExprSpan = RaiseExpr SrcSpan
 
@@ -377,7 +402,10 @@ data Decorator annot =
    , decorator_args :: [Argument annot] -- ^ Decorator arguments.
    , decorator_annot :: annot 
    }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (Decorator SrcSpan)
+instance FromJSON (Decorator SrcSpan)
 
 type DecoratorSpan = Decorator SrcSpan
 
@@ -429,7 +457,10 @@ data Parameter annot
      , param_default :: Maybe (Expr annot) -- ^ Optional default value.
      , param_annot :: annot
      }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (Parameter SrcSpan)
+instance FromJSON (Parameter SrcSpan)
 
 type ParameterSpan = Parameter SrcSpan
 
@@ -443,7 +474,10 @@ instance Annotated Parameter where
 data ParamTuple annot
    = ParamTupleName { param_tuple_name :: Ident annot, param_tuple_annot :: annot } -- ^ A variable name.
    | ParamTuple { param_tuple :: [ParamTuple annot], param_tuple_annot :: annot } -- ^ A (possibly nested) tuple parameter.
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (ParamTuple SrcSpan)
+instance FromJSON (ParamTuple SrcSpan)
 
 type ParamTupleSpan = ParamTuple SrcSpan
 
@@ -467,7 +501,10 @@ data Argument annot
      , arg_expr :: Expr annot -- ^ Argument expression.
      , arg_annot :: annot
      }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (Argument SrcSpan)
+instance FromJSON (Argument SrcSpan)
 
 type ArgumentSpan = Argument SrcSpan
 
@@ -484,7 +521,10 @@ data Handler annot
      , handler_suite :: Suite annot
      , handler_annot :: annot 
      }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (Handler SrcSpan)
+instance FromJSON (Handler SrcSpan)
 
 type HandlerSpan = Handler SrcSpan
 
@@ -501,7 +541,10 @@ data ExceptClause annot
      { except_clause :: Maybe (Expr annot, Maybe (Expr annot))
      , except_clause_annot :: annot 
      }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (ExceptClause SrcSpan)
+instance FromJSON (ExceptClause SrcSpan)
 
 type ExceptClauseSpan = ExceptClause SrcSpan
 
@@ -519,7 +562,10 @@ data Comprehension annot
      , comprehension_for :: CompFor annot
      , comprehension_annot :: annot 
      }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (Comprehension SrcSpan)
+instance FromJSON (Comprehension SrcSpan)
 
 type ComprehensionSpan = Comprehension SrcSpan
 
@@ -532,7 +578,10 @@ instance Annotated Comprehension where
 data ComprehensionExpr annot
    = ComprehensionExpr (Expr annot)
    | ComprehensionDict (DictKeyDatumList annot)
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (ComprehensionExpr SrcSpan)
+instance FromJSON (ComprehensionExpr SrcSpan)
 
 type ComprehensionExprSpan = ComprehensionExpr SrcSpan
 
@@ -549,7 +598,10 @@ data CompFor annot =
    , comp_for_iter :: Maybe (CompIter annot) 
    , comp_for_annot :: annot
    }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (CompFor SrcSpan)
+instance FromJSON (CompFor SrcSpan)
 
 type CompForSpan = CompFor SrcSpan
 
@@ -566,7 +618,10 @@ data CompIf annot =
    , comp_if_iter :: Maybe (CompIter annot)
    , comp_if_annot :: annot 
    }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (CompIf SrcSpan)
+instance FromJSON (CompIf SrcSpan)
 
 type CompIfSpan = CompIf SrcSpan
 
@@ -580,7 +635,10 @@ instance Annotated CompIf where
 data CompIter annot 
    = IterFor { comp_iter_for :: CompFor annot, comp_iter_annot :: annot }
    | IterIf { comp_iter_if :: CompIf annot, comp_iter_annot :: annot }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (CompIter SrcSpan)
+instance FromJSON (CompIter SrcSpan)
 
 type CompIterSpan = CompIter SrcSpan
 
@@ -674,7 +732,10 @@ data Expr annot
    | Paren { paren_expr :: Expr annot, expr_annot :: annot }
    -- | String conversion (backquoted expression). Version 2 only. 
    | StringConversion { backquoted_expr :: Expr annot, expr_anot :: annot }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (Expr SrcSpan)
+instance FromJSON (Expr SrcSpan)
 
 type ExprSpan = Expr SrcSpan
 
@@ -684,7 +745,10 @@ instance Span ExprSpan where
 data YieldArg annot
    = YieldFrom (Expr annot) annot -- ^ Yield from a generator (Version 3 only)
    | YieldExpr (Expr annot) -- ^ Yield value of an expression
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (YieldArg SrcSpan)
+instance FromJSON (YieldArg SrcSpan)
 
 type YieldArgSpan = YieldArg SrcSpan
 
@@ -698,7 +762,10 @@ instance Annotated Expr where
 data DictKeyDatumList annot =
    DictMappingPair (Expr annot) (Expr annot)
    | DictUnpacking (Expr annot)
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (DictKeyDatumList SrcSpan)
+instance FromJSON (DictKeyDatumList SrcSpan)
 
 type DictKeyDatumListSpan = DictKeyDatumList SrcSpan
 
@@ -719,7 +786,10 @@ data Slice annot
      , slice_annot :: annot 
      }
    | SliceEllipsis { slice_annot :: annot }
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic)
+
+instance ToJSON (Slice SrcSpan)
+instance FromJSON (Slice SrcSpan)
 
 type SliceSpan = Slice SrcSpan
 
@@ -759,7 +829,7 @@ data Op annot
    | MatrixMult { op_annot :: annot } -- ^ \'@\'
    | Invert { op_annot :: annot } -- ^ \'~\' (bitwise inversion of its integer argument)
    | Modulo { op_annot :: annot } -- ^ \'%\'
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic,ToJSON,FromJSON)
 
 type OpSpan = Op SrcSpan
 
@@ -784,7 +854,7 @@ data AssignOp annot
    | RightShiftAssign { assignOp_annot :: annot } -- ^ \'>>=\'
    | FloorDivAssign { assignOp_annot :: annot } -- ^ \'\/\/=\'
    | MatrixMultAssign { assignOp_annot :: annot } -- ^ \'@=\'
-   deriving (Eq,Ord,Show,Typeable,Data,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Functor,Generic,ToJSON,FromJSON)
 
 type AssignOpSpan = AssignOp SrcSpan
 

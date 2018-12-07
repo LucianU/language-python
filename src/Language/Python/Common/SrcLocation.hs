@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      : Language.Python.Common.SrcLocation 
@@ -40,6 +41,9 @@ import Prelude hiding ((<>))
 
 import Language.Python.Common.Pretty
 import Data.Data
+
+import GHC.Generics
+import Data.Aeson
 
 -- | A location for a syntactic entity from the source code.
 -- The location is specified by its filename, and starting row
@@ -147,7 +151,7 @@ data SrcSpan
     }
     -- | No span information.
   | SpanEmpty 
-   deriving (Eq,Ord,Show,Typeable,Data)
+   deriving (Eq,Ord,Show,Typeable,Data,Generic,ToJSON,FromJSON)
 
 instance Pretty SrcSpan where
    pretty span@(SpanCoLinear {}) = prettyMultiSpan span
